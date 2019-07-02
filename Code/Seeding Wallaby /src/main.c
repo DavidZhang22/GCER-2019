@@ -15,15 +15,15 @@ int timeout; //if camera does not sense burning timeout will be set to 1
 #define arm_mid 700
 #define claw_open_people 530
 #define claw_open_firetruck 1050
-#define claw_open_medical 850
+#define claw_open_medical 800
 #define claw_open_fireman 1000
 #define claw_close 100
 #define claw_start 350
 #define left_light 0
 #define right_light 1
-#define black 4000
+#define black 3600
 #define white 2500
-#define grey 3700
+#define grey 3500
 #define THRESHOLD 3870 //need to change to 3600 during the day, 3800 at night
 
 int left_motor = 1;
@@ -508,25 +508,26 @@ int main(){
     set_servo_position(arm, arm_start);
     double change = gyrocalibrate();
     enable_servos();
-    msleep(1000);
     shut_down_in(119);
     //people and ambulance go on ground of nonburning building, medical supplies go on top of nonburning building
     //firetruck goes on ground of burning building, firefighter goes on top of burning building 
     //turn_left90();
+    move(-1500, 50, change);
     turn(1, 90, change); 
     msleep(500); 
     move(-1500, 400, change); //square up
-    set_servo_position(claw, claw_open_medical);
     set_servo_position(arm, arm_down);
+    msleep(1000);
+    set_servo_position(claw, claw_open_medical);
     msleep(300);
     move(1500, 550, change);
-    line_sense_grey(500);
+    line_sense(500);
     //move(1500, 10, change); 
     //get medical supplies 
     //set_servo_position(claw, claw_close); //grabs medical supplies 1
     msleep(500);
     //set_servo_position(arm, arm_mid);
-    move(1500, 125, change); 
+    move(1500, 40, change); 
     turn(1, 90, change);
     msleep(500);
     set_servo_position(arm, arm_down);
@@ -535,7 +536,7 @@ int main(){
     line_follow_middle(40, 1000); 
     slow_servo(claw, claw_close);
     while(analog(left_light) < black){
-        move(750, 1, change); 
+    	line_follow_middle(1, 600); 
     }
     move(-1500, 50, change); 
     //set_servo_position(arm, arm_mid);
@@ -548,31 +549,29 @@ int main(){
     scanBuilding(); 
     //drop off medical supplies 
     if(burning_building == 1){
-        move(-1500, 150, change); //backs up a little to get in front of nonburning building 
         msleep(500);
-        //move(1500, 50, change);
-        turn(1, 30, change);
+        turn(1, 90, change);//turns to face nonburning building
         msleep(500);
-        move(1500, 50, change); 
+        move(1500, 75, change); 
         slow_servo(claw, claw_open_medical); //drops off medical supplies 
-        //move(-1500, 150, change);  
         msleep(500); 
-        move(-1500, 100, change);
+        move(-1500, 165, change);
         msleep(500);
         slow_servo(arm, arm_up); 
         msleep(500); 
-        turn(0, 30, change);
-        msleep(500);
-        //move(-1500, 150, change); 
-        //turn_left90(); //faces firetruck
-        msleep(500);
         turn(0, 90, change);
         msleep(500);
-        move(-1500, 80, change);
+        line_sense(-500);//square on middle line
+        msleep(200);
+        move(-1500, 200, change); 
+        msleep(200);
         turn(0, 90, change);
         msleep(500);
-    }
-    else if(burning_building == 0){
+        move(-1500, 300, change); 
+        msleep(100);
+        turn(0, 90, change);//turn to face firetruck
+        msleep(500);
+    }else if(burning_building == 0){
         move(1500, 700, change); //moves forward to burning building 
         move(-1500, 25, change); 
         msleep(500);				
@@ -596,37 +595,39 @@ int main(){
         turn(0, 90, change); 
         msleep(500); 
     }
-    //get firetruck 
-    //move(-1500, 50, change); 
-    msleep(500); 
+    //get firetruck
+    line_sense(-500);
+    msleep(100);
+    move(1500, -200, change);
+	msleep(200);
     slow_servo(claw, claw_open_firetruck);  
     msleep(500); 
     set_servo_position(arm, arm_down);
     msleep(500); 
-    move(1500, 200, change); 
+    move(1500,400, change);
     msleep(500);
     slow_servo(claw, claw_close); //grabs firetruck 
     msleep(500); 
     //drop off firetruck
-    if(burning_building == 0){
-        move(-1500, 300, change); 
+    if(burning_building == 1){
+        printf("burning building 1");
         //turn_left90(); 
         turn(1, 90, change);
-        msleep(500);
-        //turn_left90(); //turns to face forward
+        msleep(200); printf("turn1");
         turn(1, 90, change);
-        msleep(500);
-        move(1500, 600, change); //moves forward to non burning building 
-        turn_left(1500, 300); 
+        msleep(200); printf("turn2");
+	    turn(1, 20, change);
+        msleep(200); printf("turn3");
+        move(1500, 100, change);
         msleep(500);
         slow_servo(claw, claw_open_firetruck); 
         msleep(500);
-        move(-1500, 150, change);
-        turn_right(1500, 300);
-        msleep(200);
-        move(-1500, 900, change);     
-    }
-    else if(burning_building == 1){
+        slow_servo(arm, arm_up);
+        
+        turn(0, 20, change);  
+  
+    }else{
+        printf("burning building 0");
         move(-1500, 200, change); 
         line_sense(-750); 
         //turn_left90();
@@ -635,42 +636,44 @@ int main(){
         //left_turn(1500, 90); //turns to face forward 
         turn(1, 90, change);
         msleep(500);
-        move(1500, 200, change); //moves to non burning building 
-        turn_left(1500, 300); 
+        move(1500, 600, change); //moves to non burning building 
+        turn(1, 40, change);
         msleep(300);
         slow_servo(claw, claw_open_firetruck); 
         msleep(500);
         move(-1500, 150, change);
-        turn_right(1500, 00);
+        turn(0, 90, change);
         msleep(300);
         move(-1500, 200, change); 
     }
     //get fireman
-    msleep(500);
     //turn_right90();
-    turn(0, 90, change); 
-    msleep(500);
     //turn_right90();
     turn(0, 90, change);
-    msleep(500);
-    move(1500, 400, change);
-    //turn_right90();
+    move(1500, 200, change);
+    turn(1, 90, change);
+    move(-1500, 1200, change); //square up
+    move(1500, 500, change);
     turn(0, 90, change);
-    msleep(500); 
+    set_servo_position(arm, arm_down);
+    msleep(500);
+    move(1500, 200, change);
+    //turn_right90();
     set_servo_position(claw, claw_open_fireman); 
     move(1500, 300, change);
     msleep(500); 
     set_servo_position(claw, claw_close);
     msleep(500); 
     move(-1500, 150, change); 
+    turn(1, 90, change);
+    line_sense(500);
+    turn(1, 90, change);
+	line_follow_middle(25, 1200);
+	set_servo_position(claw, 700);
+	move(-1500, 400, change); 
+
     
     
-    
-    
-
-
-
-
-
+ 
     return 0;
 }
